@@ -1,4 +1,4 @@
-"""Exercise the built starter at a project subpath in Chromium."""
+"""Exercise Sky Geometry at a project subpath in Chromium."""
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -29,22 +29,50 @@ def main():
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.goto(f"http://127.0.0.1:{server.server_port}/example-tool/")
-                page.locator("#sample").click()
-                assert page.locator("#output").input_value() == "Halifax\nLangley\nVancouver"
-                assert "1 duplicate removed" in page.locator("#status").inner_text()
-                page.locator("#input").fill('<img src=x onerror="alert(1)">\n<img src=x onerror="alert(1)">')
-                assert page.locator("#output").input_value() == '<img src=x onerror="alert(1)">'
+                page.wait_for_function("document.querySelector('#result1').textContent !== '—'")
+                page.locator("#zone").fill("UTC")
+                page.locator("#zone").press("Tab")
+                page.locator("#date").fill("1987-04-10T19:21:00")
+                page.locator("#latitude").fill("38.921389")
+                page.locator("#longitude").fill("-77.065556")
+                page.locator("#epoch").select_option("ofdate")
+                page.locator("#coord1").fill("23:09:16.641")
+                page.locator("#coord2").fill("-06:43:11.61")
+                page.locator("#calculate-form button[type=submit]").click()
+                assert abs(float(page.locator("#result1").inner_text().rstrip("°")) - 15.1249) < 0.01
+                assert abs(float(page.locator("#result2").inner_text().rstrip("°")) - 248.0337) < 0.01
+                assert page.locator("#chart svg").count() == 1
+                assert page.locator("#curve-table tr").count() >= 24
+                page.locator("#direction").select_option("reverse")
+                page.locator("#calculate-form button[type=submit]").click()
+                assert page.locator("#result1").inner_text().startswith("23:09:16.64")
+                page.locator("#ra2").fill("23:09:16.641")
+                page.locator("#dec2").fill("-06:43:11.61")
+                page.locator("#separation-form button").click()
+                assert "0.00000°" in page.locator("#separation-result").inner_text()
+                page.locator("#csv").fill('name,ra,dec\n"<img src=x>",1,-2\nBad,no,2')
+                page.locator("#csv-convert").click()
+                assert "1 converted, 1 errors" in page.locator("#csv-status").inner_text()
+                assert page.locator("#csv-results tr").count() == 2
                 assert page.locator("img").count() == 0
-                page.locator("#clear").click()
-                assert page.locator("#output").input_value() == ""
-                page.locator("#sample").click()
+                with page.expect_download() as downloaded:
+                    page.locator("#csv-download").click()
+                assert downloaded.value.suggested_filename == "skygeometry-targets.csv"
+                page.locator("#remember").click()
+                assert page.locator("#forget").is_visible()
+                page.reload()
+                page.wait_for_function("document.querySelector('#result1').textContent !== '—'")
+                assert page.locator("#latitude").input_value() == "38.921389"
+                assert page.locator("#csv").input_value() == ""
+                page.locator("#forget").click()
+                assert page.evaluate("localStorage.getItem('coolcode:skygeometry:location')") is None
                 page.screenshot(path=str(screenshots / "desktop.png"), full_page=True)
                 page.set_viewport_size({"width": 390, "height": 844})
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                 page.screenshot(path=str(screenshots / "mobile.png"), full_page=True)
                 assert not errors, errors
                 browser.close()
-            print("Browser checks passed: project subpath, sample, clear, safe text and mobile layout")
+            print("Browser checks passed: known coordinates, reverse transform, curve, CSV, opt-in storage and mobile layout")
         finally:
             server.shutdown()
 

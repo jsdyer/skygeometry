@@ -1,34 +1,340 @@
 <!doctype html>
 <html lang="en-CA">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="{{DESCRIPTION}}">
-  <title>{{TITLE}} · CoolCode</title>
-  <link rel="stylesheet" href="./style.css">
-  <script type="module" src="./app.mjs"></script>
-  {{VISIT_COUNTER}}
-</head>
-<body data-tool-id="{{TOOL_ID}}">
-  <a class="skip" href="#main">Skip to content</a>
-  <header><a href="https://coolcode.ca/">← CoolCode.ca</a><a href="{{SOURCE_URL}}">Source &amp; instructions ↗</a></header>
-  <main id="main">
-    <p class="eyebrow">Browser tool starter</p>
-    <h1>{{TITLE}}</h1>
-    <p class="intro">{{DESCRIPTION}}</p>
-    <section aria-labelledby="example-title">
-      <h2 id="example-title">Clean a list</h2>
-      <p>Trim spaces, skip blank lines and remove exact duplicates. Capitalization stays distinct.</p>
-      <div class="panels">
-        <div><label for="input">Your lines</label><textarea id="input" rows="10" maxlength="100000" spellcheck="false" placeholder="Paste one item per line"></textarea></div>
-        <div><label for="output">Cleaned lines</label><textarea id="output" rows="10" readonly spellcheck="false"></textarea></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="{{DESCRIPTION}}" />
+    <title>RA Dec to Alt Az Astronomy Calculator · CoolCode</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./app.mjs"></script>
+    {{VISIT_COUNTER}}
+  </head>
+  <body data-tool-id="{{TOOL_ID}}">
+    <a class="skip" href="#main">Skip to content</a>
+    <header>
+      <a class="brand" href="https://coolcode.ca/"
+        >CoolCode<span> / sky &amp; photography</span></a
+      ><a href="{{SOURCE_URL}}">Source &amp; guide</a>
+    </header>
+    <main id="main">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Your sky, from where you stand</p>
+          <h1>{{TITLE}}</h1>
+          <p class="intro">From coordinates<br />to a place in the sky.</p>
+          <p class="description">{{DESCRIPTION}}</p>
+          <div class="badges">
+            <span>Works locally</span><span>J2000 &amp; equator of date</span
+            ><span>No API key</span>
+          </div>
+        </div>
+        <div class="hero-orbit" aria-hidden="true">
+          <span class="orbit o1"></span><span class="orbit o2"></span
+          ><span class="orbit o3"></span><span class="orbit-dot"></span
+          ><span class="horizon-line"></span
+          ><span class="orbit-label"
+            >N&nbsp;&nbsp; · &nbsp;&nbsp;E&nbsp;&nbsp; ·
+            &nbsp;&nbsp;S&nbsp;&nbsp; · &nbsp;&nbsp;W</span
+          >
+        </div>
+      </section>
+      <div class="workspace">
+        <section class="panel inputs" aria-labelledby="inputs-title">
+          <h2 id="inputs-title">Set your viewpoint</h2>
+          <form id="calculate-form">
+            <label for="place">Start with a place</label
+            ><select id="place"></select>
+            <div class="grid-two">
+              <div>
+                <label for="latitude">Latitude °</label
+                ><input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  min="-90"
+                  max="90"
+                  required
+                />
+              </div>
+              <div>
+                <label for="longitude">Longitude °</label
+                ><input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  min="-180"
+                  max="180"
+                  required
+                />
+              </div>
+            </div>
+            <p class="muted">North and east are positive. West is negative.</p>
+            <div class="actions">
+              <button type="button" id="locate" class="quiet">
+                Use my location</button
+              ><button type="button" id="remember" class="quiet">
+                Remember location
+              </button>
+            </div>
+            <button type="button" id="forget" class="text-button" hidden>
+              Forget saved location
+            </button>
+            <hr />
+            <div class="section-top">
+              <h3>Observation time</h3>
+              <button type="button" id="now" class="quiet">Now</button>
+            </div>
+            <label for="date">Date and time in the selected zone</label
+            ><input id="date" type="datetime-local" step="1" required /><label
+              for="zone"
+              >Time zone</label
+            ><input
+              id="zone"
+              list="zones"
+              spellcheck="false"
+              required
+            /><datalist id="zones">
+              <option value="UTC"></option>
+              <option value="America/Vancouver"></option>
+              <option value="America/Halifax"></option>
+              <option value="America/Toronto"></option>
+              <option value="America/Whitehorse"></option>
+              <option value="Europe/London"></option></datalist
+            ><label for="fold">If the clock repeats this time</label
+            ><select id="fold">
+              <option value="earlier">Use the first occurrence</option>
+              <option value="later">Use the second occurrence</option>
+            </select>
+            <hr />
+            <label for="direction">Conversion</label
+            ><select id="direction">
+              <option value="forward">RA / Dec to altitude / azimuth</option>
+              <option value="reverse">Altitude / azimuth to RA / Dec</option>
+            </select>
+            <div id="target-control">
+              <label for="target">Target starting point</label
+              ><select id="target"></select>
+            </div>
+            <div class="grid-two">
+              <div>
+                <label for="coord1" id="coord1-label">Right ascension</label
+                ><input
+                  id="coord1"
+                  value="00:42:44.3"
+                  required
+                  spellcheck="false"
+                />
+              </div>
+              <div>
+                <label for="coord2" id="coord2-label">Declination °</label
+                ><input
+                  id="coord2"
+                  value="+41:16:09"
+                  required
+                  spellcheck="false"
+                />
+              </div>
+            </div>
+            <label for="ra-unit">RA input units</label
+            ><select id="ra-unit">
+              <option value="hours">Hours · decimal or hh:mm:ss</option>
+              <option value="degrees">
+                Degrees · decimal or dd:mm:ss
+              </option></select
+            ><label for="epoch">Equatorial coordinate system</label
+            ><select id="epoch">
+              <option value="J2000">J2000 mean equator</option>
+              <option value="ofdate">
+                True equator of observation date
+              </option></select
+            ><label class="check"
+              ><input type="checkbox" id="refraction" /> Include standard
+              atmospheric refraction</label
+            ><button class="primary" type="submit">
+              Calculate sky position
+            </button>
+          </form>
+          <p id="status" role="status" aria-live="polite">
+            Enter a viewpoint and target to begin.
+          </p>
+          <noscript
+            >JavaScript is required for local astronomy calculations.</noscript
+          >
+        </section>
+        <div class="results-stack">
+          <section class="panel" aria-labelledby="results-title">
+            <div class="section-top">
+              <h2 id="results-title">Sky position</h2>
+              <span id="visibility" class="tag"></span>
+            </div>
+            <p id="instant" class="muted"></p>
+            <div class="stats">
+              <div>
+                <span id="result1-label">Altitude</span
+                ><strong id="result1">—</strong
+                ><small id="result1-note"></small>
+              </div>
+              <div>
+                <span id="result2-label">Azimuth</span
+                ><strong id="result2">—</strong
+                ><small id="result2-note"></small>
+              </div>
+            </div>
+            <dl id="details"></dl>
+            <p id="precision" class="note"></p>
+          </section>
+          <section class="panel" aria-labelledby="chart-title">
+            <div class="section-top">
+              <h2 id="chart-title">The next 24 hours</h2>
+              <button id="download-curve" type="button" class="quiet">
+                Export curve CSV
+              </button>
+            </div>
+            <p class="muted">
+              Fixed target coordinates from the observation time. Background
+              shading shows the Sun’s position.
+            </p>
+            <div class="legend">
+              <span class="legend-target">Target altitude</span
+              ><span class="legend-night">Astronomical night</span
+              ><span class="legend-twilight">Twilight</span>
+            </div>
+            <div
+              id="chart"
+              class="chart"
+              role="img"
+              aria-label="Target altitude over the next 24 hours"
+            ></div>
+            <label for="cursor">Inspect a point on the curve</label
+            ><input
+              id="cursor"
+              type="range"
+              min="0"
+              max="144"
+              value="0"
+            /><output id="cursor-value" for="cursor"></output>
+            <div id="events" class="events"></div>
+            <details>
+              <summary>Hourly values as a table</summary>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Local time</th>
+                      <th>Altitude</th>
+                      <th>Azimuth</th>
+                      <th>Sun altitude</th>
+                    </tr>
+                  </thead>
+                  <tbody id="curve-table"></tbody>
+                </table>
+              </div>
+            </details>
+          </section>
+          <section class="panel" aria-labelledby="separation-title">
+            <h2 id="separation-title">How far apart are two targets?</h2>
+            <p class="muted">
+              Compare the calculated target with a second coordinate in the same
+              equatorial system. RA uses the selected input units above.
+            </p>
+            <form id="separation-form">
+              <div class="grid-two">
+                <div>
+                  <label for="ra2">Second right ascension</label
+                  ><input id="ra2" value="05:35:17.3" required />
+                </div>
+                <div>
+                  <label for="dec2">Second declination °</label
+                  ><input id="dec2" value="-05:23:28" required />
+                </div>
+              </div>
+              <button type="submit" class="quiet">Measure separation</button
+              ><output id="separation-result" role="status"></output>
+            </form>
+          </section>
+        </div>
       </div>
-      <div class="actions"><button id="sample" type="button">Load example</button><button id="clear" type="button">Clear</button><button id="copy" type="button" hidden>Copy result</button></div>
-      <p id="status" role="status" aria-live="polite">Paste a list to begin.</p>
-      <noscript><p>This tool needs JavaScript to process your text. The source is available above.</p></noscript>
-    </section>
-    <aside aria-label="Privacy"><strong>Stays on your device.</strong> The browser processes your text in this tab. Reloading clears it.</aside>
-  </main>
-  <footer>Part of <a href="https://coolcode.ca/">the CoolCode collection</a>. {{ISSUE_LINK}}</footer>
-</body>
+      <section class="panel batch" aria-labelledby="batch-title">
+        <div class="section-top">
+          <h2 id="batch-title">Convert a target list</h2>
+          <span class="tag">CSV · local processing</span>
+        </div>
+        <p class="muted">
+          Paste <code>name,ra,dec</code> columns. Every row uses the viewpoint,
+          time, equatorial system, RA units and refraction setting in your last
+          calculation. <span id="batch-limit">Up to 2,000 rows.</span>
+        </p>
+        <label for="csv">Target CSV</label
+        ><textarea
+          id="csv"
+          rows="5"
+          maxlength="1048576"
+          spellcheck="false"
+          placeholder="name,ra,dec&#10;Andromeda,00:42:44.3,+41:16:09"
+        ></textarea>
+        <div class="actions">
+          <button type="button" id="csv-example" class="quiet">
+            Load target examples</button
+          ><button type="button" id="csv-convert">Convert CSV</button
+          ><button type="button" id="csv-download" class="quiet" hidden>
+            Download results</button
+          ><button type="button" id="csv-clear" class="quiet">
+            Clear list
+          </button>
+        </div>
+        <p id="csv-status" role="status" aria-live="polite"></p>
+        <div class="table-wrap">
+          <table id="csv-table" hidden>
+            <thead>
+              <tr>
+                <th>Target</th>
+                <th>Altitude</th>
+                <th>Azimuth</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="csv-results"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="explain">
+        <article>
+          <h2>Understand the frame</h2>
+          <p>
+            J2000 inputs are rotated for precession and nutation at the
+            observation time. “Of date” inputs already use that date’s equator.
+            This is fixed-direction geometry: stellar proper motion, parallax,
+            aberration and moving-object ephemerides are not applied.
+          </p>
+        </article>
+        <article>
+          <h2>Read the horizon</h2>
+          <p>
+            Altitude is 0° at a level horizon and 90° overhead. Azimuth runs
+            clockwise from north: east 90°, south 180°, west 270°. Buildings,
+            terrain, clouds and light pollution are not modeled. Refraction is
+            an approximate standard-atmosphere correction.
+          </p>
+        </article>
+        <article>
+          <h2>Your observing notes stay yours</h2>
+          <p>
+            Coordinates and CSVs stay in this browser tab. Location is saved
+            only when you choose “Remember location.” Location permission is
+            optional. The shared CoolCode counter receives aggregate page opens,
+            not your location or targets.
+          </p>
+        </article>
+      </section>
+    </main>
+    <footer>
+      <span
+        >Calculations:
+        <a href="https://github.com/cosinekitty/astronomy"
+          >Astronomy Engine 2.1.19</a
+        >
+        · <a href="./vendor/astronomy-LICENSE.txt">MIT licence</a></span
+      ><span>{{ISSUE_LINK}}</span>
+    </footer>
+  </body>
 </html>

@@ -1,16 +1,23 @@
 {
-  "id": "coolcode-tool-template",
-  "title": "CoolCode Tool Starter",
-  "description": "A browser-only example that trims lines and removes exact duplicates.",
-  "category": "security",
-  "tags": ["text", "lines", "duplicates"],
-  "icon": "scan-search",
-  "url": "/coolcode-tool-template/",
-  "source": "https://github.com/jsdyer/coolcode-tool-template",
+  "id": "skygeometry",
+  "title": "Sky Geometry",
+  "description": "Convert RA and declination to altitude and azimuth, plan target visibility and compare sky coordinates in your browser.",
+  "category": "field-kit",
+  "tags": [
+    "astronomy",
+    "coordinates",
+    "RA Dec",
+    "altitude",
+    "azimuth",
+    "observing"
+  ],
+  "icon": "moon-star",
+  "url": "/skygeometry/",
+  "source": "https://github.com/jsdyer/skygeometry",
   "hosting": "project",
   "access": "browser",
   "data_info": {
     "mode": "local",
-    "detail": "The browser reads the text you paste and compares its lines."
+    "detail": "Astronomy Engine calculates fixed sky-coordinate transformations locally from your location, date and selected coordinate system."
   }
 }
