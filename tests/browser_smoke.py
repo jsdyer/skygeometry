@@ -32,7 +32,7 @@ def main():
                 page.wait_for_function("document.querySelector('#result1').textContent !== '—'")
                 page.locator("#zone").fill("UTC")
                 page.locator("#zone").press("Tab")
-                page.locator("#date").fill("1987-04-10T19:21:00")
+                page.locator("#date").fill("1987-04-10T19:21")
                 page.locator("#latitude").fill("38.921389")
                 page.locator("#longitude").fill("-77.065556")
                 page.locator("#epoch").select_option("ofdate")
